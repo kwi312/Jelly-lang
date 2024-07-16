@@ -20,6 +20,7 @@ class AnotherClass | ClassName
 end
 
 local instance = AnotherClass() --just call it to create instance
+instance:someMethod()
 ```
 
 ### strings
