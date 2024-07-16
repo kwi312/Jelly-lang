@@ -7,13 +7,13 @@ Jelly is a Lua dialect that provides OOP support and some syntax improvements.
 ### Classes
 
 ```
-class ClassName
+class SomeClass
   method someMethod --brackets are optional if the function accepts no arguments
     print('hello world')
   end
 end
 
-class AnotherClass | ClassName
+class AnotherClass | SomeClass
   method printText(text)
     print(text)
   end
