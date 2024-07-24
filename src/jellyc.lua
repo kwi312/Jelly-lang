@@ -1,4 +1,4 @@
-local _JVERSION = "0.1.0"
+local _JVERSION = "0.2.0"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
@@ -136,6 +136,10 @@ local function lex(code)
 			checkw()
 			push(')')
 			pushtok('close_bracket')
+		elseif c == '<' or c == '>' then
+			checkw()
+			push(c)
+			pushtok('moreless')
 		elseif c == '\'' then
 			checkw()
 			local str = {}
@@ -246,9 +250,19 @@ local function lexOperators(tokens)
 		elseif t.type == 'newline' then
 			linen = linen + 1
 			push(t)
+		elseif t.type == 'moreless' then
+			if peek().data == '=' then
+				push{type='moreless', data=t.data .. '='}
+				move()
+			else
+				push(t)
+			end
 		elseif t.type == 'mathsig' then
 			if t.data == '-' and peek().data == '>' then
 				push({type='point', data='.'})
+				move()
+			elseif peek().data == '=' then
+				push({type='modificationoperator', data=t.data})
 				move()
 			else
 				push(t)
@@ -309,6 +323,11 @@ local function lexExpressions(tokens)
 			push{type='bracket_expression', data = exp}
 		elseif t.type == 'newline' then
 			linen = linen + 1
+		elseif t.type == 'modificationoperator' then
+			local toMod = last()
+			push{type='etc', data='='}
+			push(toMod)
+			push{type='mathsig', data=t.data}
 		elseif t.type == 'format_string' then
 			log('formatting string:', t.data)
 			local str = {}
@@ -626,7 +645,7 @@ local function compile(tokens)
 				if context.name then
 					push(context.name)
 				end
-				push(table.concat(context.exp, ' '))
+				push(table.concat(context.args.data, ' '))
 			end,
 			close = function()
 				push('end')
