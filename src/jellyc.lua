@@ -1,4 +1,4 @@
-local _JVERSION = "0.2.0"
+local _JVERSION = "0.3.0"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
@@ -257,9 +257,12 @@ local function lexOperators(tokens)
 			else
 				push(t)
 			end
+		elseif t.data == '=' and peek().data == '=' then
+			move()
+			push{type='ceq', data='=='}
 		elseif t.type == 'mathsig' then
 			if t.data == '-' and peek().data == '>' then
-				push({type='point', data='.'})
+				push({type='arrowoperator', data=''})
 				move()
 			elseif peek().data == '=' then
 				push({type='modificationoperator', data=t.data})
@@ -286,6 +289,9 @@ local function lexExpressions(tokens)
 	end
 	local function last()
 		return rettok[#rettok]
+	end
+	local function remove()
+		return table.remove(rettok)
 	end
 	local function replace(tok)
 		table.remove(rettok)
@@ -321,6 +327,10 @@ local function lexExpressions(tokens)
 				end
 			until level <= 0
 			push{type='bracket_expression', data = exp}
+		elseif last() and last().type == 'bracket_expression' and t.type == 'arrowoperator' then
+			local bracket = remove()
+			push{type='key', data='function'}
+			push(bracket)
 		elseif t.type == 'newline' then
 			linen = linen + 1
 		elseif t.type == 'modificationoperator' then
