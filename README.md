@@ -1,46 +1,64 @@
 # Jelly
 
-Jelly is a Lua dialect that provides OOP support and some syntax improvements.
+Jelly - dynamic, object oriented language that compiles to lua.
 
-## Syntax
+## Overview
 
-### Classes
-
+The Jelly syntax is lua syntax with some simplifications.
 ```
-class SomeClass
-  method someMethod --brackets are optional if the function (or method) accepts no arguments
+if true --no "then" required
+  print(true)
+end
+
+
+if (2 < 3)
+  print('2 < 3')
+end
+
+
+unless false
+  print(true)
+end
+
+loop --simple infinite loop
+
+end
+
+
+for i in 5, -5
+  io.write(i) -- will print "543210-1-2-3-4-5"
+end
+
+
+f = ()-> print("hello world") end -- equivalent to "a = function() print("hello world") end"
+
+
+-- We also have some additions
+
+class Human
+
+  method speak -- brackets are optional if the method receives no arguments
     print('hello world')
   end
+
 end
 
-class AnotherClass | SomeClass
-  method printText(text)
-    print(text)
+class Cat
+
+  method meow
+    print('meow')
   end
-end
-
-local instance = AnotherClass() --just call it to create instance
-instance:someMethod()
-```
-
-### strings
-```
-local simpleString = 'here is simple string'
-local interpolated = "pi is {math.pi}" -- interpolated string
-```
-
-### loops
-
-```
-loop --simple infinite loop
-  print(os.clock())
-end
-
-while true --another infinite loop
 
 end
 
-for i in 5, 0 --decreacing i
-  io.write(i) --> 543210
+class Neko | Human, Cat -- multiple inheritance supported
 end
+
+h = Human()
+h:speak() -- will print "hello world"
+
+n = Neko()
+n:speak()
+n:meow()
 ```
+

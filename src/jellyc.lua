@@ -26,6 +26,7 @@ local function parseArgs(args)
 end
 local verboseOutput = false
 local function log(...)
+	if not verboseOutput then return end
 	local str = {}
 	for i,v in ipairs({...}) do
 		table.insert(str, tostring(v))
@@ -739,8 +740,8 @@ local function jmain()
 		os.exit()
 	end
 	if args['-vo'] then
-		log('verbose')
 		verboseOutput = true
+		log('verbose')
 	end
 	local inputFiles = ''
 	for i,v in ipairs(args) do
