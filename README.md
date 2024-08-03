@@ -43,6 +43,7 @@ class Human
 
 end
 
+
 class Cat
 
   method meow
@@ -51,14 +52,19 @@ class Cat
 
 end
 
+--preprocessor conditional compilation
+-/if WEEABOO
 class Neko | Human, Cat -- multiple inheritance supported
 end
+-/end
 
 h = Human()
 h:speak() -- will print "hello world"
 
+-/if WEEABOO
 n = Neko()
 n:speak()
 n:meow()
+-/end
 ```
 

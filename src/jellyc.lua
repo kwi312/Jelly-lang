@@ -1,4 +1,4 @@
-local _JVERSION = "0.3.0"
+local _JVERSION = "0.4.0d"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
