@@ -1,4 +1,4 @@
-local _JVERSION = "0.4.0"
+local _JVERSION = "0.4.1"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
@@ -235,9 +235,11 @@ local function lexOperators(tokens)
 		os.exit()
 	end
 	local len = #tokens
+	local comment = false
 	while offset < len do
 		local t = get()
-		if t.type == 'point' then
+	if comment and t.type ~= 'newline' then
+	elseif t.type == 'point' then
 			local prev = last()
 			local nxt = peek()
 			if prev.type == 'number' and nxt.type == 'number' then
@@ -250,6 +252,7 @@ local function lexOperators(tokens)
 			end
 		elseif t.type == 'newline' then
 			linen = linen + 1
+			comment = false
 			push(t)
 		elseif t.type == 'moreless' then
 			if peek().data == '=' then
@@ -268,6 +271,8 @@ local function lexOperators(tokens)
 			elseif peek().data == '=' then
 				push({type='modificationoperator', data=t.data})
 				move()
+			elseif peek().data == '-' then
+				comment = true
 			else
 				push(t)
 			end
@@ -489,12 +494,16 @@ local function parseExpressions(tokens)
 				local vars = {}
 				local var = {data=''}
 				repeat
+					if peek().data == ',' then
+						get()
+					end
 					var = get()
+					log('for var:', var.data)
 					table.insert(vars, var.data)
 				until peek().data ~= ','
 				local insep = get()
 				if insep.data ~= 'in' then
-					parserErr('syntax error near for:'.. insep.data)
+					parserErr('syntax error near for (\'in\' requirered):'.. insep.data)
 				end
 				if peek().type == 'number' then
 					local from = get()
@@ -516,7 +525,7 @@ local function parseExpressions(tokens)
 				elseif peek().type == 'word' or peek().type == 'key' then
 					local fname = get()
 					local fargs = get()
-					push{type='iterator', data={exp={fname.data, fargs.data}}}
+					push{type='for_declaration', data={type='func', vars=vars, exp={fname.data, fargs.data}}}
 				else
 					parserErr('unexpected token in for declaration:'.. peek().type)
 				end
@@ -679,8 +688,17 @@ local function compile(tokens)
 					push('=')
 					push(table.concat(context.exp, ','))
 					push('do')
-				elseif context.type == 'iterator' then
-
+				elseif context.type == 'func' then
+					push(table.concat(context.vars, ','))
+					push('in')
+					for index, value in ipairs(context.exp) do
+						if type(value) == 'table' then
+							push(table.concat(value, ' '))
+						else
+							push(tostring(value))
+						end
+					end
+					push('do')
 				end
 			end,
 			close = function()
@@ -700,9 +718,11 @@ local function compile(tokens)
 		end
 	}
 	local function newScope(scope)
+		log('new scope', scope.type)
 		table.insert(scopes, 1, scope)
 	end
 	local function closeScope()
+		log('close scope', (scopes[#scopes] or {}).type)
 		return table.remove(scopes, 1)
 	end
 	for ti, token in ipairs(tokens) do
