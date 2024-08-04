@@ -33,7 +33,7 @@ end
 f = ()-> print("hello world") end -- equivalent to "a = function() print("hello world") end"
 
 
--- We also have some additions
+-- Jelly also have some additions
 
 class Human
 
