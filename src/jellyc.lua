@@ -1,4 +1,4 @@
-local _JVERSION = "0.4.0d"
+local _JVERSION = "0.4.0"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
@@ -339,6 +339,11 @@ local function lexExpressions(tokens)
 			push{type='etc', data='='}
 			push(toMod)
 			push{type='mathsig', data=t.data}
+		elseif last() and last().type == 'word' and t.type == 'arrowoperator' then
+			local fname = last()
+			local args = peek()
+			replace{type='key', data='function'}
+			push(fname)
 		elseif t.type == 'format_string' then
 			log('formatting string:', t.data)
 			local str = {}
@@ -406,7 +411,11 @@ local function parseExpressions(tokens)
 	local function parserErr(text)
 		local cd = {}
 		for o = offset-5, offset + 5 do
-			table.insert(cd, ((tokens[o] or {}).data or ''))
+			local t = (tokens[o] or {}).data or ''
+			if type(t) ~= 'string' then
+				for k, v in pairs(t) do print("--->", k, v) end
+			end
+			table.insert(cd, tostring(t))
 		end
 		print(string.format('parser error:\n\tline: %s\n\treason: %s\n\tcode: %s', linen, text, table.concat(cd, ' ')))
 		os.exit()
