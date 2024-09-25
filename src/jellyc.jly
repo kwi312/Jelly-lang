@@ -6,6 +6,12 @@ local err -> (msg)
     os.exit()
 end
 -/include fileOperations.jly
+-/include preprocessor.jly
+-/include lexer.jly
+-/include parser.jly
+
+local target = {}
+-/include target/lua54.jly
 
 local parseArg -> (defaults)
     local ret = {}
@@ -78,6 +84,14 @@ local jMain -> ()
     end
     if (#args < 1)
         err('no input files')
+    end
+    for i, file in ipairs(args)
+        local data = readLines(file)
+        local prep = preprocess(data, args.V, args.D)
+        local tokens = lex(prep, args.V)
+        local expressions = parse(tokens, args.V)
+        local compiled = target[args.t].compile(expressions, args.V)
+        writeFile(args.o[i], compiled)
     end
 end
 

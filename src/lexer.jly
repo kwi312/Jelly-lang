@@ -1,0 +1,13 @@
+local class Token
+    method init(tokenType, tokenData)
+        self.type = tokenType
+        self.data = tokenData
+    end
+    method finalize
+        return tostring(self.data)
+    end
+end
+
+local lex -> (text)
+
+end

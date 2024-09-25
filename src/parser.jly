@@ -1,0 +1,23 @@
+local class Expression
+    method init(expressionTokens)
+        self.tokens = expressionTokens
+    end
+    method finalize
+        local ret = {}
+        for i, exp in ipairs(self.tokens)
+            table.insert(ret, exp:finalize())
+        end
+    end
+end
+
+local class BracketExpression | Expression
+
+end
+
+local class Scope
+
+end
+
+local parse -> (tokens)
+
+end

@@ -1,0 +1,26 @@
+local preprocess -> (lines, defs)
+    local ret = {}
+    local defined = {}
+    for i, line in ipairs(lines)
+        if (string.sub(line, 1, 2) == '-/')
+            local act, args = string.match(line '\\-/(%w+)%s+([%w%s%p]*)')
+            if (act == 'include')
+
+            elseif (act == 'comment')
+
+            elseif (act == 'if')
+
+            elseif (act == 'ifnot')
+
+            elseif (act == 'error')
+
+            elseif (act == 'end')
+
+            elseif (act == 'macro')
+
+            else
+            
+            end
+        end
+    end
+end

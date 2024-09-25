@@ -1,4 +1,4 @@
-local reaLines -> (path)
+local readLines -> (path)
     local lines = {}
     for line in io.lines(path)
         table.insert(lines, line)
