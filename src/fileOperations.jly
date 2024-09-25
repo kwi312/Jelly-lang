@@ -1,0 +1,13 @@
+local reaLines -> (path)
+    local lines = {}
+    for line in io.lines(path)
+        table.insert(lines, line)
+    end
+    return lines
+end
+
+local writeFile -> (path, data)
+    local f = io.open(path, "rb")
+    f:write(data)
+    f:close()
+end

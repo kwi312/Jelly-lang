@@ -1,0 +1,88 @@
+_JVERSION = '0.6.0'
+local err -> (msg)
+    unless msg os.exit() end
+    local errMsg = "ERROR: {msg}"
+    print(errMsg)
+    os.exit()
+end
+-/include fileOperations.jly
+
+local parseArg -> (defaults)
+    local ret = {}
+    local tmp = {}
+    for k, v in pairs(defaults)
+        ret[k] = v.value
+    end
+    local skip = false
+    for i, v in ipairs(arg)
+        unless skip
+            if (string.sub(v, 1, 1) == '-')
+                local key = string.sub(v, 2)
+                if (defaults[key] == nil and not (key == 'h'))
+                    local errStr = "unknown argument: {key}"
+                    os.exit()
+                end
+                if (key == 'h')
+                    for k, v in pairs(defaults)
+                        if (type(v.value) == 'table')
+                            v.value = v.value[1]
+                        elseif (type(v.value) == 'boolean')
+                            v.value = tostring(v.value)
+                        end
+                        local str = "-{k}\t{v.descr}\r{string.rep('\t', 7)}default: \'{v.value or ''}\'"
+                        print(str)
+                    end
+                    os.exit()
+                end
+                if (type(defaults[key].value) == 'boolean')
+                    tmp[key] = true
+                elseif (type(defaults[key].value) == 'table' and arg[i+1])
+                    unless (tmp[key]) tmp[key] = {} end
+                    table.insert(tmp[key], tonumber(arg[i+1]) or arg[i+1])
+                    skip = true
+                elseif (arg[i+1])
+                    tmp[key] = tonumber(arg[i+1]) or arg[i+1]
+                    skip = true
+                else
+                    local errStr = "argument required for \'{key}\'"
+                    print(errStr)
+                    os.exit()
+                end
+            else
+                table.insert(tmp, v)
+            end
+        else
+            skip = false
+        end
+    end
+    for k, v in pairs(tmp)
+        ret[k] = tmp[k]
+    end
+    return ret
+end
+
+local jMain -> ()
+    local args = parseArg({
+        o = {value={'jly_out.lua'}, descr='output filenames'},
+        t = {value={'lua54'}, descr='compilation target'},
+        V = {value=false, descr='verbose output'},
+        D = {value={}, descr='preprocessor definitions'},
+        s = {value='', descr='shebang'}
+    })
+    print('-----------------------------')
+    for k, v in pairs(args)
+        if (type(v) == 'table')
+            v = v[1]
+        end
+        print(k, v)
+    end
+    if (#args < 1)
+        err('no input files')
+    end
+end
+
+local jMainStatus, jMainError = pcall(jMain)
+unless jMainStatus
+    local errMsg = "internal compiler error:{jMainError}"
+    print(errMsg)
+end
