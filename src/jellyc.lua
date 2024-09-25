@@ -1,4 +1,4 @@
-local _JVERSION = "0.4.1"
+local _JVERSION = "0.5.0"
 local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
@@ -96,6 +96,9 @@ local function lex(code)
 	local offset = 0
 	local function getchar()
 		offset = offset + 1
+		if not string.sub(code, offset, offset) then
+			error('unexpected eof')
+		end
 		return string.sub(code, offset, offset)
 	end
 	local function peekchar()
@@ -174,15 +177,15 @@ local function lex(code)
 				--log('str:', c, specc)
 			until c == '\"' and not specc
 			pushtok('format_string')
-		elseif c == '[' then
-			checkw()
-			push(c)
-			push('open_square')
-		elseif c == ']' then
-			checkw()
-			push(c)
-			push('close_square')
-		elseif c == '-' or c == '+' or c == '/' or c == '*' or c == '^' or c == '%' then
+		--elseif c == '[' then
+			--checkw()
+			--push(c)
+			--push('open_square')
+		--elseif c == ']' then
+			--checkw()
+			--push(c)
+			--push('close_square')
+		elseif c == '-' or c == '+' or c == '/' or c == '*' or c == '^' or c == '%' or c == '~' then
 			checkw()
 			push(c)
 			pushtok('mathsig')
@@ -473,7 +476,7 @@ local function parseExpressions(tokens)
 				push{type='method_declaration', data={name=name.data, args=args}}
 			elseif t.data == 'end' then
 				push{type='close_scope', data='end'}
-			elseif t.data == 'if' or t.data == 'unless' then
+			elseif t.data == 'if' or t.data == 'unless' or t.data == 'elseif' then
 				local exp = get()
 				if exp.type == 'word' or exp.type == 'key' or exp.type == 'bracket_expression' then
 					push{type=t.data..'_declaration', data={exp=exp.data}}
@@ -715,6 +718,15 @@ local function compile(tokens)
 			push(scopes[1].data.name..'.'..context.name)
 			push('=')
 			push(context.delegate)
+		end,
+		elseif_declaration = function (context)
+			push('elseif')
+			if type(context.exp) == 'table' then
+				push(table.concat(context.exp, ' '))
+			else
+				push(context.exp)
+			end
+			push('then')
 		end
 	}
 	local function newScope(scope)
