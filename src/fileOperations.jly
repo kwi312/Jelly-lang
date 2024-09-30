@@ -6,8 +6,12 @@ local readLines -> (path)
     return lines
 end
 
-local writeFile -> (path, data)
+local writeFile -> (path, data, shebang)
     local f = io.open(path, "rb")
+    if shebang
+        f:write(shebang)
+        f:write('\n')
+    end
     f:write(data)
     f:close()
 end

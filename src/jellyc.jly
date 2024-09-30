@@ -1,10 +1,8 @@
-_JVERSION = '0.6.0'
-local err -> (msg)
-    unless msg os.exit() end
-    local errMsg = "ERROR: {msg}"
-    print(errMsg)
-    os.exit()
-end
+_JVERSION = ''
+VERBOSE = false
+
+-/include strings.jly
+-/include logging.jly
 -/include fileOperations.jly
 -/include preprocessor.jly
 -/include lexer.jly
@@ -24,9 +22,9 @@ local parseArg -> (defaults)
         unless skip
             if (string.sub(v, 1, 1) == '-')
                 local key = string.sub(v, 2)
-                if (defaults[key] == nil and not (key == 'h'))
+                if (defaults[key] == nil and not (key == 'h') and not (key == 'v'))
                     local errStr = "unknown argument: {key}"
-                    os.exit()
+                    err(errStr)
                 end
                 if (key == 'h')
                     for k, v in pairs(defaults)
@@ -38,6 +36,10 @@ local parseArg -> (defaults)
                         local str = "-{k}\t{v.descr}\r{string.rep('\t', 7)}default: \'{v.value or ''}\'"
                         print(str)
                     end
+                    os.exit()
+                elseif (key == 'v')
+                    local vstr = "Jellyc version: {_JVERSION}"
+                    info(vstr, true)
                     os.exit()
                 end
                 if (type(defaults[key].value) == 'boolean')
@@ -51,8 +53,7 @@ local parseArg -> (defaults)
                     skip = true
                 else
                     local errStr = "argument required for \'{key}\'"
-                    print(errStr)
-                    os.exit()
+                    err(errStr)
                 end
             else
                 table.insert(tmp, v)
@@ -85,18 +86,21 @@ local jMain -> ()
     if (#args < 1)
         err('no input files')
     end
+    if (args.V)
+        VERBOSE = true
+    end
     for i, file in ipairs(args)
         local data = readLines(file)
-        local prep = preprocess(data, args.V, args.D)
-        local tokens = lex(prep, args.V)
-        local expressions = parse(tokens, args.V)
-        local compiled = target[args.t].compile(expressions, args.V)
-        writeFile(args.o[i], compiled)
+        local prep = preprocess(data, args.D, file)
+        local tokens = lex(prep)
+        local expressions = parse(tokens)
+        local compiled = target[args.t].compile(expressions)
+        writeFile(args.o[i], compiled, args.s)
     end
 end
 
 local jMainStatus, jMainError = pcall(jMain)
 unless jMainStatus
     local errMsg = "internal compiler error:{jMainError}"
-    print(errMsg)
+    err(errMsg)
 end

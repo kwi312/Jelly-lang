@@ -1,0 +1,15 @@
+local info -> (text, nv)
+    if (VERBOSE or nv)
+        local str = "{os.clock()}:> {text}"
+        print(str)
+    end
+end
+local warn -> (text)
+    local str = "WARN: {text}"
+    info(str, true)
+end
+local err -> (text)
+    local str = "ERROR: {text}"
+    info(str, true)
+    os.exit()
+end

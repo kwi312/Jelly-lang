@@ -1,0 +1,26 @@
+string.split -> (str, sep)
+    unless sep sep = '%s' end
+    local t = {}
+    for s in string.gmatch(str, '([^"..sep.."]+)')
+        table.insert(t, s)
+    end
+    return t
+end
+
+string.trimleft -> (str)
+    while (string.sub(str, 1, 1) == ' ' or string.sub(str, 1, 1) == '\n' or string.sub(str, 1, 1) == '\r')
+        str = string.sub(str, 2)
+    end
+    return str
+end
+
+string.trimright -> (str)
+    while (string.sub(str, -1, -1) == ' ' or string.sub(str, -1, -1) == '\n' or string.sub(str, -1, -1) == '\r')
+        str = string.sub(str, -2)
+    end
+    return str
+end
+
+string.trim -> (str)
+    return string.trimright(string.trimleft(str))
+end
