@@ -1,5 +1,5 @@
 # Jelly
-
+![Jelly logo](./logo.svg)
 Jelly - dynamic, object oriented language that compiles to lua.
 
 ## Overview
