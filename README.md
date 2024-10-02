@@ -1,70 +1,109 @@
 # Jelly
 
-Jelly - dynamic, object oriented language that compiles to lua.
+![Jelly logo](./logo.svg)
+Jelly - dynamic, object oriented language based on lua.
 
-## Overview
+## Differences from lua
 
-The Jelly syntax is lua syntax with some simplifications.
+* New operators `+= -= *= ^= /=`
+* New `unless` and `try` statements
+* Different syntax for declaring loops, statements and functions
+* Classes with multiple inheritance
+* C-like preprocessor
+
+## Syntax
+
+Jelly syntax is similar to lua syntax, but with some differences.
+
+### if/unless statements
+
 ```
-if true --no "then" required
-  print(true)
+if (condition)
+    --code
 end
 
+unless (!condition)
+    --code
+end
+```
 
-if (2 < 3)
-  print('2 < 3')
+or simpler
+
+```
+if variable
+    --code
 end
 
+unless variable
+    --code
+end
+```
 
-unless false
-  print(true)
+### Loops
+
+```
+while (condition)
+    --code
 end
 
-loop --simple infinite loop
-
+for i in 1, 5
+    --code
 end
 
-
-for i in 5, -5
-  io.write(i) -- will print "543210-1-2-3-4-5"
+loop --simplest infinite loop
+    --code
 end
+```
 
+### Classes
 
-f = ()-> print("hello world") end -- equivalent to "a = function() print("hello world") end"
-
-
--- Jelly also have some additions
-
+```
 class Human
+    method init(name)
+        self.name = name
+        return self
+    end
 
-  method speak -- brackets are optional if the method receives no arguments
-    print('hello world')
-  end
-
+    method say(text)
+        local str = "{self.name} - {text}"
+        print(str)
+    end
 end
-
 
 class Cat
-
-  method meow
-    print('meow')
-  end
-
+    method meow
+        print('meow')
+    end
 end
 
---preprocessor conditional compilation
--/if WEEABOO
-class Neko | Human, Cat -- multiple inheritance supported
+class Neko | Human, Cat
+
 end
--/end
-
-h = Human()
-h:speak() -- will print "hello world"
-
--/if WEEABOO
-n = Neko()
-n:speak()
-n:meow()
--/end
 ```
 
+Instance creation:
+
+```
+--There is no special 'constructor method' in jelly, you can use any method as a constructor and have multiple constructors in the same class
+local tom = Human():init('Tom')
+tom:say('hello world')
+
+local cat = Cat()
+cat:meow()
+
+local neko = Neko():init('Yui') --init method from Human class
+neko:meow()
+neko:say('hello world')
+```
+
+### Functions
+
+```
+f -> () --define function 'f'
+
+end
+
+()-> --define unnamed function
+
+end
+```
