@@ -1,5 +1,5 @@
-local _JVERSION = "0.5.0"
-local jelly_keywords = {'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
+local _JVERSION = "0.6.0"
+local jelly_keywords = {'label', 'end','if','unless','elseif','else','local','while','loop','for','function','method','class','until','repeat','in','try','catch','do','true','false'}
 local function parseArgs(args)
 	local skipNext = false
 	for i,v in ipairs(arg) do
@@ -267,6 +267,9 @@ local function lexOperators(tokens)
 		elseif t.data == '=' and peek().data == '=' then
 			move()
 			push{type='ceq', data='=='}
+		elseif t.data == '=' and last().type == 'concatenationoperator' then
+			replace({type='modificationoperator', data='..'})
+			move()
 		elseif t.type == 'mathsig' then
 			if t.data == '-' and peek().data == '>' then
 				push({type='arrowoperator', data=''})
@@ -276,6 +279,8 @@ local function lexOperators(tokens)
 				move()
 			elseif peek().data == '-' then
 				comment = true
+			elseif t.type == 'point' and peek().type == 'point' then
+				push({type='concatenationoperator', data = '..'})
 			else
 				push(t)
 			end
@@ -452,6 +457,14 @@ local function parseExpressions(tokens)
 					log(name.data, 'have', #sups, 'superclasses')
 				end
 				push{type='class_declaration', data={name=name.data, super=sups}}
+			elseif t.data == 'label' then
+				local lbl = peek()
+				if lbl.type == 'word' then
+					push{type='label_declaration', data='::'..lbl.data..'::'}
+					move()
+				else
+					parserErr('invalid label declaration: ' .. tostring(lbl.type))
+				end
 			elseif t.data == 'function' then
 				if peek().type == 'word' then
 					local name = get()
@@ -559,22 +572,22 @@ local function compile(tokens)
 			push('=')
 			push('\''..context.name..'\'')
 			push(',')
-			push('__CSUPER')
+			push('__ISUPER')
 			push('=')
 			push('{')
 			push('}')
 			push('}')
-			push(string.format('do local __superclass={%s} for __super=#__superclass,1,-1 do for name,method in pairs(__superclass[__super]) do %s.__CSUPER[name]=method end end end', table.concat(context.super, ','),context.name))
+			push(string.format('do local __superclass={%s} for __super=#__superclass,1,-1 do for name,method in pairs(__superclass[__super]) do %s.__ISUPER[name]=method end end end', table.concat(context.super, ','),context.name))
 			end,
 			close = function(context)
-			push('setmetatable')
+			--[[push('setmetatable')
 			push('(')
 			push(context.name)
 			push(',')
 			push('{')
 			push('__index')
 			push('=')
-			push(context.name .. '.__CSUPER')
+			push(context.name .. '.__ISUPER')
 			push(',')
 			push('__call')
 			push('=')
@@ -598,13 +611,20 @@ local function compile(tokens)
 			push('__name')
 			push('=')
 			push('\''..context.name..'\'')
+			push(',')
+			push('__add')
+			push('=')
+			push(string.format("%s.add", context.name))
+			push(',')
 			push('}')
 			push(')')
 			push('return')
 			push('obj')
 			push('end')
 			push('}')
-			push(')')
+			push(')')]]
+
+			push(string.format('setmetatable(%s, {__name = \'%s\', __call = function(o) local obj = o or {}; setmetatable(obj, {__name = \'%s\', __index = %s, __add = %s.add, __sub = %s.sub, __mul = %s.mul, __div = %s.div, __gc = %s.free, __len = %s.len, __tostring = %s.tostring, __concat = %s.concat}); return obj end, __index = %s.__ISUPER})', context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name, context.name))
 			end
 		},
 		method_declaration = {
@@ -764,18 +784,19 @@ local function jmain()
 		['-vo'] = false,
 		['-h'] = false,
 		['-d'] = {},
-		['-o'] = 'jly.out'
+		['-o'] = 'jly_out.lua'
 	})
 	if args['-v'] then
 		print(_JVERSION)
 		os.exit()
 	end
 	if args['-h'] then
+		print(string.format('Jellyc v%s', _JVERSION))
 		print('options:')
 		print('\t-h - show help')
 		print('\t-v - show version')
 		print('\t-vo - verbose output')
-		print('\t-o - set output filename (default:jly.out)')
+		print('\t-o - set output filename (default:jly_out.lua)')
 		print('\t-d - define preprocessor variable')
 		print('')
 		os.exit()
