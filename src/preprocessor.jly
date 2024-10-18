@@ -1,49 +1,90 @@
 local preprocess -> (lines, def, source)
+    local lineNumber = 0
+    local prepmsg = "preprocessing: {source}"
+    info(prepmsg)
+    for k, v in pairs(def)
+        local msg = "\r\tpreprocessor definition: {def}"
+        info(msg)
+    end
     local ret = {}
     local macros = {}
     local defined = {}
+    local condScopes = {}
+
+    local newScope -> (addl)
+        table.insert(condScopes, 1, addl)
+    end
+    local checkScope -> ()
+        if (condScopes[1] == nil) return true
+        elseif (condScopes[1]) return true
+        else return false
+        end
+    end
+    local closeScope -> ()
+        table.remove(condScopes, 1)
+    end
+
+    local actions = {
+        ['define'] = (dt)->
+            local name, value = string.match(dt, '(%w+)%s*([%w%s%p]*)')
+            if (defined[name])
+                local errMsg = "{name} already defined"
+                err(errMsg)
+            end
+            if (value == '')
+                defined[name] = true
+            else
+                defined[name] = value
+            end
+        end,
+        ['include'] = (path)->
+            return preprocess(readFile(path), defined, path)
+        end,
+        ['note'] = (text)->
+            local msg = "NOTE({source} | {lineNumber}): {text}"
+            print(msg)
+        end,
+        ['error'] = (err)->
+            local msg = "ERROR({source} | {lineNumber}): {err}"
+            print(msg)
+            os.exit()
+        end
+    }
+
     for i, line in ipairs(lines)
+        lineNumber = i
         if (string.sub(line, 1, 2) == '-/')
-            local act, args = string.match(line, '\\-/(%w+)%s+([%w%s%p]*)')
-            if (act == 'include')
-
-            elseif (act == 'note')
-                local msg = "NOTE: {source}:({i}) - {args}"
-                info(msg, true)
+            local act, args = string.match(line, '\\-/(%w+)%s*([%w%s%p]*)')
+            if (actions[act])
+                local res = actions[act](args)
+                if res
+                    table.insert(ret, res)
+                end
             elseif (act == 'if')
+                local expr = "return {args}"
+                expr = load(expr)
+                if (expr())
 
+                end
             elseif (act == 'ifnot')
+                local expr = "return {args}"
+                expr = load(expr)
+                unless (expr())
 
-            elseif (act == 'error')
-            local errStr = "{source}:({i}) - {args}"
-            err(errStr)
+                end
             elseif (act == 'end')
 
-            elseif (act == 'macro')
-                local mname, margs, mbody = string.match(string.trim(args), '([%w_]+)%s*<([%w%p%s]*)>%s*([%w%p%s]+)')
-                local infoStr = "macro {mname} with arguments <{margs}>"
-                info(infoStr)
-                margs = string.split(margs, ',')
-                for i, v in ipairs(margs) margs[i] = string.trim(v) end
-                if (macros[mname])
-                    local errStr = "macros redefinition: {source}:{i} - {mname}"
-                    err(errStr)
-                end
-                macros[mname] = {args = margs, body = mbody}
             else
-                local errStr = "unknown preprocessor directive {act}"
+                local errStr = "unknown preprocessor directive \'{act}\' on line {i}"
                 err(errStr)
             end
         else
-            table.insert(ret, line)
+            if (checkScope())
+                table.insert(ret, line)
+            end
         end
     end
 
     local text = table.concat(ret, '\n')
-    for macro, v in pairs(macros)
-        local search = "!{macro}%%s*([%%w%%p%%s]*)
-        local replacer -> ()
-        text = string.gsub(text, search)
-    end
-    print(text)
+    return text
 end

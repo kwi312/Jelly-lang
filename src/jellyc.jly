@@ -1,7 +1,8 @@
-_JVERSION = ''
+_JVERSION = ' '
 VERBOSE = false
 
 -/include strings.jly
+-/include iterators.jly
 -/include logging.jly
 -/include fileOperations.jly
 -/include preprocessor.jly
@@ -92,10 +93,21 @@ local jMain -> ()
     for i, file in ipairs(args)
         local data = readLines(file)
         local prep = preprocess(data, args.D, file)
+-/if DEBUG
+    local prep_res = "preprocessor:\nlen = {string.len(prep)}\ncode:\n{prep}"
+    print(prep_res)
+-/end
         local tokens = lex(prep)
-        local expressions = parse(tokens)
-        local compiled = target[args.t].compile(expressions)
-        writeFile(args.o[i], compiled, args.s)
+-/if DEBUG
+    local tok_res = "lexer:\ntokenCount = {#tokens}"
+    print(tok_res)
+    for i, v in pairs(tokens)
+        print(i, v, v.type, v.data)
+    end
+-/end
+        --local expressions = parse(tokens)
+        --local compiled = target[args.t].compile(expressions)
+        --writeFile(args.o[i], compiled, args.s)
     end
 end
 

@@ -9,5 +9,100 @@ local class Token
 end
 
 local lex -> (text)
-
+    local keywords = {['end'] = true,['if'] = true,['unless'] = true,['elseif'] = true,['else'] = true,['local'] = true,['while'] = true,['loop'] = true,['for'] = true,['function'] = true,['method'] = true,['class'] = true,['until'] = true,['repeat'] = true,['in'] = true,['try'] = true,['catch'] = true,['do'] = true,['true'] = true,['false'] = true, ['label'] = true}
+    local ret = {}
+    local word = {}
+    local lineNumber = 1
+    local push -> (tp, dt)
+        table.insert(ret, {type=tp, data=dt})
+    end
+    local checkw -> ()
+        if (#word > 0)
+            local wrd = table.concat(word)
+            if (keywords[wrd])
+                push('key', wrd)
+                word = {}
+            elseif (tonumber(wrd))
+                push('number', wrd)
+                word = {}
+            else
+                push('word', wrd)
+                word = {}
+            end
+        end
+    end
+    local specChars = {
+        ['\n'] = ()->
+            checkw()
+            lineNumber += 1
+            push('newline', lineNumber);
+        end,
+        [' '] = ()->
+            checkw()
+        end,
+        ['+'] = (c)->
+            checkw()
+            push('maths', c)
+        end,
+        ['-'] = (c)->
+            checkw()
+            push('maths', c)
+        end,
+        ['*'] = (c)->
+            checkw()
+            push('maths', c)
+        end,
+        ['/'] = (c)->
+            checkw()
+            push('maths', c)
+        end,
+        [':'] = (c)->
+            checkw()
+            push('selector', c)
+        end,
+        ['.'] = (c)->
+            checkw()
+            push('dot', c)
+        end,
+        ['{'] = (c)->
+            checkw()
+            push('open_fig_bracket', c)
+        end,
+        ['}'] = (c)->
+            checkw()
+            push('close_fig_bracket', c)
+        end,
+        ['['] = (c)->
+            checkw()
+            push('open_sq_bracket', c)
+        end,
+        [']'] = (c)->
+            checkw()
+            push('close_sq_bracket', c)
+        end,
+        ['('] = (c)->
+            checkw()
+            push('open_bracket', c)
+        end,
+        [')'] = (c)->
+            checkw()
+            push('close_bracket', c)
+        end,
+        [','] = (c)->
+            checkw()
+            push('comma_separator', c)
+        end,
+        [';'] = (c)->
+            checkw()
+            push('expression_separator', c)
+        end
+    }
+    for char in string.chars(text)
+        if (specChars[char])
+            specChars[char](char)
+        else
+            table.insert(word, char)
+        end
+    end
+    return ret
 end
