@@ -6,7 +6,7 @@ Jelly - dynamic, object oriented language based on lua.
 ## Differences from lua
 
 * New operators `+= -= *= ^= /=`
-* New `unless` and `try` statements
+* New `unless` and `try` statements (not implemented)
 * Different syntax for declaring loops, statements and functions
 * Classes with multiple inheritance
 * C-like preprocessor
